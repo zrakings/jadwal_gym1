@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gym Schedule & Custom Workout Planner</title>
+  <style>
+    body { 
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+      margin: 0; 
+      padding: 20px; 
+      background: #121214; 
+      color: #fff; 
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 25px;
+    }
+
+    /* Layout Utama 2 Kolom */
+    .dashboard-container {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 20px;
+      max-width: 1300px;
+      margin: 0 auto;
+    }
+
+    @media (max-width: 768px) {
+      .dashboard-container {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card { 
+      background: #27272a; 
+      padding: 20px; 
+      border-radius: 12px; 
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      height: fit-content;
+    }
+
+    select, input, button { 
+      padding: 10px; 
+      margin: 5px 0; 
+      border-radius: 6px; 
+      border: none; 
+      font-size: 14px; 
+    }
+
+    select, input { 
+      background: #3f3f46; 
+      color: #fff; 
+      width: 100%; 
+      box-sizing: border-box; 
+    }
+
+    .btn-blue { 
+      background: #3b82f6; 
+      color: #fff; 
+      cursor: pointer; 
+      width: 100%;
+      font-weight: bold;
+    }
+    .btn-blue:hover { background: #2563eb; }
+
+    .btn-green { 
+      background: #22c55e; 
+      color: #fff; 
+      cursor: pointer; 
+      width: 100%;
+      font-weight: bold;
+    }
+    .btn-green:hover { background: #16a34a; }
+
+    .btn-danger { 
+      background: #ef4444; 
+      color: #fff; 
+      cursor: pointer; 
+      padding: 6px 10px; 
+      font-size: 12px; 
+    }
+    .btn-danger:hover { background: #dc2626; }
+
+    .btn-add-exercise {
+      background: #a855f7;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      width: auto;
+      padding: 8px 16px;
+      font-size: 13px;
+    }
+    .btn-add-exercise:hover { background: #9333ea; }
+
+    .muscle-row { 
+      display: flex; 
+      gap: 8px; 
+      align-items: center; 
+      margin-top: 8px; 
+    }
+
+    .exercise-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 15px;
+      margin-top: 10px;
+    }
+
+    .exercise-card { 
+      background: #3f3f46; 
+      padding: 15px; 
+      border-radius: 10px; 
+      border: 1px solid #52525b;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .exercise-title-input {
+      font-weight: bold;
+      background: #27272a;
+      border: 1px solid #52525b;
+      color: #38bdf8;
+      font-size: 15px;
+    }
+
+    .category-tag { 
+      background: #a855f7; 
+      color: white; 
+      padding: 4px 8px; 
+      border-radius: 4px; 
+      font-size: 11px; 
+      font-weight: bold;
+      white-space: nowrap;
+    }
+
+    .set-row { 
+      display: flex; 
+      gap: 8px; 
+      align-items: center; 
+      margin-top: 6px; 
+    }
+    .set-label { 
+      width: 45px; 
+      font-size: 12px; 
+      font-weight: bold; 
+      color: #a1a1aa; 
+    }
+
+    /* Header Hari Khusus untuk Tampilan PDF/Cetak */
+    .print-only-header {
+      display: none;
+    }
+
+    /* CSS CETAK / PDF */
+    @media print {
+      body { background: #fff !important; color: #000 !important; padding: 10px; }
+      h1 { display: none !important; }
+      .dashboard-container { display: block !important; }
+      .sidebar-card, .btn-blue, .btn-danger, .btn-green, .btn-add-exercise, button { display: none !important; }
+      .card { background: #fff !important; color: #000 !important; box-shadow: none !important; border: none !important; padding: 0 !important; }
+      
+      .print-only-header {
+        display: block !important;
+        text-align: center;
+        border-bottom: 2px solid #000;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+      }
+      .print-only-header h2 { margin: 0; font-size: 22px; color: #000; }
+      .print-only-header p { margin: 5px 0 0 0; font-size: 13px; color: #4b5563; }
+
+      .exercise-card { background: #f4f4f5 !important; color: #000 !important; border: 1px solid #d4d4d8 !important; page-break-inside: avoid; }
+      .exercise-title-input { background: #fff !important; color: #000 !important; border: 1px solid #a1a1aa !important; font-size: 15px; font-weight: bold; }
+      .category-tag { background: #7e22ce !important; color: #fff !important; }
+      input { background: #fff !important; color: #000 !important; border: 1px solid #a1a1aa !important; }
+      .set-label { color: #3f3f46 !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🏋️ Gym Schedule & Custom Workout Planner</h1>
+
+  <div class="dashboard-container">
+    
+    <div class="card sidebar-card">
+      <h2>1. Pengaturan</h2>
+      
+      <div>
+        <label>Pilih Hari:</label>
+        <select id="daySelect" onchange="loadExercises()">
+          <option value="Senin">Senin</option>
+          <option value="Selasa">Selasa</option>
+          <option value="Rabu">Rabu</option>
+          <option value="Kamis">Kamis</option>
+          <option value="Jumat">Jumat</option>
+          <option value="Sabtu">Sabtu</option>
+          <option value="Minggu">Minggu</option>
+        </select>
+      </div>
+
+      <div style="margin-top: 15px;">
+        <label>Target Otot:</label>
+        <div id="muscleListContainer">
+          <div class="muscle-row">
+            <select class="muscle-select" onchange="loadExercises()">
+              <option value="">-- Pilih Otot --</option>
+              <option value="chest">Dada (Chest)</option>
+              <option value="back">Punggung (Back)</option>
+              <option value="legs">Kaki (Legs)</option>
+              <option value="shoulders">Bahu (Shoulders)</option>
+              <option value="triceps">Triceps</option>
+              <option value="biceps">Biceps</option>
+              <option value="abs">Perut (Abs)</option>
+            </select>
+          </div>
+        </div>
+
+        <button class="btn-blue" onclick="addMuscleInput()" style="margin-top: 12px;">+ Tambah Target Otot</button>
+      </div>
+
+      <div style="margin-top: 25px; border-top: 1px solid #52525b; padding-top: 15px;">
+        <label>Fitur Unduh:</label>
+        <button class="btn-green" onclick="printPDF()" style="margin-top: 8px;">🖨️ Cetak / Download PDF</button>
+        <button class="btn-blue" onclick="downloadTXT()" style="margin-top: 8px;">📄 Simpan File TXT</button>
+      </div>
+    </div>
+
+    <div class="card">
+      
+      <div class="print-only-header">
+        <h2 id="pdfHeaderTitle">JADWAL LATIHAN HARI SENIN</h2>
+        <p id="pdfHeaderDate">Tanggal Cetak: -</p>
+      </div>
+
+      <h2 id="workoutTitle">2. Menu Latihan Hari Senin</h2>
+      <div id="exerciseList">
+        <p style="color: #a1a1aa;">Pilih target otot terlebih dahulu.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const workoutDatabase = {
+      chest: ["Bench Press", "Incline Dumbbell Press", "Chest Fly"],
+      back: ["Lat Pulldown", "Barbell Row", "Deadlift"],
+      legs: ["Squat", "Leg Press", "Romanian Deadlift"],
+      shoulders: ["Overhead Press", "Lateral Raise", "Front Raise"],
+      triceps: ["Rope Pushdown", "Skullcrusher", "Tricep Dips"],
+      biceps: ["Barbell Curl", "Hammer Curl", "Preacher Curl"],
+      abs: ["Crunches", "Plank", "Leg Raise"]
+    };
+
+    let cardCounter = 0;
+
+    function addMuscleInput() {
+      const container = document.getElementById('muscleListContainer');
+      const div = document.createElement('div');
+      div.className = 'muscle-row';
+      div.innerHTML = `
+        <select class="muscle-select" onchange="loadExercises()">
+          <option value="">-- Pilih Otot --</option>
+          <option value="chest">Dada (Chest)</option>
+          <option value="back">Punggung (Back)</option>
+          <option value="legs">Kaki (Legs)</option>
+          <option value="shoulders">Bahu (Shoulders)</option>
+          <option value="triceps">Triceps</option>
+          <option value="biceps">Biceps</option>
+          <option value="abs">Perut (Abs)</option>
+        </select>
+        <button class="btn-danger" style="padding: 10px;" onclick="removeMuscleInput(this)">✕</button>
+      `;
+      container.appendChild(div);
+    }
+
+    function removeMuscleInput(btn) {
+      btn.parentElement.remove();
+      loadExercises();
+    }
+
+    function loadExercises() {
+      const day = document.getElementById('daySelect').value;
+      const selects = document.querySelectorAll('.muscle-select');
+      const container = document.getElementById('exerciseList');
+      const title = document.getElementById('workoutTitle');
+      
+      container.innerHTML = '';
+      title.textContent = `2. Menu Latihan Hari ${day}`;
+
+      let selectedMuscles = [];
+      selects.forEach(select => {
+        if (select.value && !selectedMuscles.includes(select.value)) {
+          selectedMuscles.push(select.value);
+        }
+      });
+
+      if (selectedMuscles.length === 0) {
+        container.innerHTML = '<p style="color: #a1a1aa;">Pilih target otot terlebih dahulu.</p>';
+        return;
+      }
+
+      selectedMuscles.forEach(muscle => {
+        if (workoutDatabase[muscle]) {
+          const muscleGroupBlock = document.createElement('div');
+          muscleGroupBlock.style.cssText = `
+            margin-bottom: 35px; 
+            padding-bottom: 20px; 
+            border-bottom: 2px dashed #52525b;
+          `;
+
+          const groupHeader = document.createElement('div');
+          groupHeader.style.cssText = `
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+          `;
+          
+          const groupTitle = document.createElement('h3');
+          groupTitle.style.cssText = 'color: #a855f7; margin: 0; font-size: 18px;';
+          groupTitle.textContent = `🎯 LATIHAN ${muscle.toUpperCase()}`;
+          
+          const addExBtn = document.createElement('button');
+          addExBtn.className = 'btn-add-exercise';
+          addExBtn.textContent = '+ Tambah Gerakan Baru';
+          addExBtn.onclick = () => createExerciseCard(cardsGrid, 'Nama Gerakan Baru', muscle);
+
+          groupHeader.appendChild(groupTitle);
+          groupHeader.appendChild(addExBtn);
+          muscleGroupBlock.appendChild(groupHeader);
+
+          const cardsGrid = document.createElement('div');
+          cardsGrid.className = 'exercise-cards-grid';
+
+          workoutDatabase[muscle].forEach(exerciseName => {
+            createExerciseCard(cardsGrid, exerciseName, muscle);
+          });
+
+          muscleGroupBlock.appendChild(cardsGrid);
+          container.appendChild(muscleGroupBlock);
+        }
+      });
+    }
+
+    function createExerciseCard(gridContainer, defaultName, category) {
+      cardCounter++;
+      const cardId = `card-${cardCounter}`;
+      
+      const div = document.createElement('div');
+      div.className = 'exercise-card';
+      div.id = cardId;
+
+      div.innerHTML = `
+        <div>
+          <div class="card-header">
+            <input type="text" class="exercise-title-input" value="${defaultName}" placeholder="Nama Gerakan">
+            <span class="category-tag">${category.toUpperCase()}</span>
+          </div>
+          
+          <div style="margin-bottom: 10px;">
+            <input type="number" placeholder="Beban (kg)">
+          </div>
+
+          <div id="sets-container-${cardId}">
+            <div class="set-row">
+              <span class="set-label">Set 1:</span>
+              <input type="number" placeholder="Repetisi">
+              <button class="btn-danger" onclick="removeSet(this, '${cardId}')">✕</button>
+            </div>
+            <div class="set-row">
+              <span class="set-label">Set 2:</span>
+              <input type="number" placeholder="Repetisi">
+              <button class="btn-danger" onclick="removeSet(this, '${cardId}')">✕</button>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top: 10px; display: flex; gap: 6px;">
+          <button class="btn-blue" style="font-size:12px; padding:6px;" onclick="addSet('${cardId}')">+ Set</button>
+          <button class="btn-danger" style="font-size:12px; padding:6px; width: 100%; font-weight: bold;" onclick="removeExerciseCard('${cardId}')">🗑️ Hapus Gerakan</button>
+        </div>
+      `;
+
+      gridContainer.appendChild(div);
+    }
+
+    function removeExerciseCard(cardId) {
+      const card = document.getElementById(cardId);
+      if (card) card.remove();
+    }
+
+    function addSet(cardId) {
+      const setsContainer = document.getElementById(`sets-container-${cardId}`);
+      const setRow = document.createElement('div');
+      setRow.className = 'set-row';
+      setRow.innerHTML = `
+        <span class="set-label">Set:</span>
+        <input type="number" placeholder="Repetisi">
+        <button class="btn-danger" onclick="removeSet(this, '${cardId}')">✕</button>
+      `;
+      setsContainer.appendChild(setRow);
+      updateSetNumbers(cardId);
+    }
+
+    function removeSet(btn, cardId) {
+      btn.parentElement.remove();
+      updateSetNumbers(cardId);
+    }
+
+    function updateSetNumbers(cardId) {
+      const setsContainer = document.getElementById(`sets-container-${cardId}`);
+      if (!setsContainer) return;
+      const setLabels = setsContainer.querySelectorAll('.set-label');
+      setLabels.forEach((label, i) => {
+        label.textContent = `Set ${i + 1}:`;
+      });
+    }
+
+    // Fungsi Cetak / Download PDF dengan Header Hari
+    function printPDF() {
+      const day = document.getElementById('daySelect').value;
+      const today = new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
+      
+      document.getElementById('pdfHeaderTitle').textContent = `JADWAL LATIHAN GYM - HARI ${day.toUpperCase()}`;
+      document.getElementById('pdfHeaderDate').textContent = `Tanggal: ${today}`;
+      
+      window.print();
+    }
+
+    // Fungsi Simpan ke File TXT
+    function downloadTXT() {
+      const day = document.getElementById('daySelect').value;
+      const today = new Date().toLocaleDateString('id-ID');
+      const cards = document.querySelectorAll('.exercise-card');
+
+      if (cards.length === 0) {
+        alert("Pilih target otot dan tambahkan latihan terlebih dahulu!");
+        return;
+      }
+
+      let txtContent = `==================================================\n`;
+      txtContent += `       JADWAL & CATATAN LATIHAN GYM\n`;
+      txtContent += `==================================================\n`;
+      txtContent += `Hari           : ${day}\n`;
+      txtContent += `Tanggal Simpan : ${today}\n`;
+      txtContent += `--------------------------------------------------\n\n`;
+
+      let currentCategory = "";
+
+      cards.forEach((card, index) => {
+        const title = card.querySelector('.exercise-title-input').value || "Tanpa Nama";
+        const category = card.querySelector('.category-tag').textContent;
+        const weight = card.querySelector('input[placeholder="Beban (kg)"]').value || "0";
+        
+        if (category !== currentCategory) {
+          currentCategory = category;
+          txtContent += `[TARGET OTOT: ${category}]\n`;
+        }
+
+        txtContent += `${index + 1}. ${title}\n`;
+        txtContent += `   - Beban: ${weight} kg\n`;
+        txtContent += `   - Repetisi: `;
+
+        let reps = [];
+        card.querySelectorAll('.set-row').forEach((row, setIndex) => {
+          const val = row.querySelector('input').value || "0";
+          reps.push(`Set ${setIndex + 1}: ${val}`);
+        });
+
+        txtContent += reps.join(', ') + `\n\n`;
+      });
+
+      txtContent += `==================================================\n`;
+
+      // Download trigger
+      const blob = new Blob([txtContent], { type: 'text/plain;charset=utf-8' });
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.href = URL.createObjectURL(blob);
+      downloadAnchor.download = `Jadwal_Gym_${day}.txt`;
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    }
+  </script>
+
+</body>
+</html>
